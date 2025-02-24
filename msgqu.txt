@@ -1,0 +1,111 @@
+
+// Server
+
+#include<stdio.h>
+#include<sys/ipc.h>
+#include<sys/msg.h>
+
+
+
+struct student{
+int rollno;
+char sname[100];
+int mark1;
+int mark2;
+};
+
+
+
+
+struct msg_queue1{
+long mesg_type;
+struct student stud;
+
+}message;
+
+
+int main(){
+
+key_t key;
+int msgid;
+key=1234;
+
+msgid=msgget(key,0666|IPC_CREAT);
+
+
+printf("enter the message type :");
+scanf("%ld",&message.mesg_type);
+
+printf("enter the empno :");
+scanf("%d",&message.emp.empno);
+
+printf("enter the salary:");
+scanf("%f",&message.emp.salary);
+
+//getchar();
+printf("enter the name:");
+//fgets(message.emp.name,sizeof(message.emp.name),stdin);
+scanf("%s",message.emp.name);
+
+if(msgsnd(msgid,&message,sizeof(message),0)==-1){
+perror("failed");
+return 1;
+}
+
+
+printf("Data sent succesfully");
+
+
+return 0;
+
+}
+
+
+
+// Client
+
+#include<stdio.h>
+#include<sys/ipc.h>
+#include<sys/msg.h>
+
+
+struct employee{
+int empno;
+char name[100];
+float salary;
+};
+
+struct msg_queue{
+long type;
+struct employee emp;
+}message;
+
+
+long int x;
+int i=1;
+
+int main(){
+key_t key;
+int msgid;
+
+if(msgid==-1){
+perror("failed");
+return 1;
+}
+key=1234;
+
+msgid=msgget(key,0666|IPC_CREAT);
+printf("enter the type:");
+scanf("%ld",&message.type);
+
+
+if(msgrcv(msgid,&message,sizeof(message),message.type,0)==-1){
+perror("failed");
+return 1;
+}
+
+
+printf("Message associated with type %ld is Name : %s\nEmp No:%d\nEmp Salary:%f\n",message.type,message.emp.name,message.emp.empno,message.emp.salary);
+printf("Tax to be paid : %f\n",message.emp.salary * 0.05);
+
+}

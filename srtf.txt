@@ -1,0 +1,133 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct process {
+    int id;        
+    int at;      
+    int bt;        
+    int remaining_bt; 
+    int ct;        
+    int wt;        
+    int tat;       
+    int rt;        
+    int completed; 
+};
+
+void Input(struct process p[], int n) {
+    for (int i = 0; i < n; i++) {
+        p[i].id = i + 1;
+        printf("Enter the AT and BT of process %d: ", i + 1);
+        scanf("%d %d", &p[i].at, &p[i].bt);
+        p[i].remaining_bt = p[i].bt;  
+        p[i].completed = 0;  
+    }
+}
+
+void SRTF(struct process p[], int n) {
+    int current_time = 0;
+    int completed_processes = 0;
+    int t_tat = 0;
+    int t_wt = 0;
+    int idle_time = 0;
+
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (p[i].at > p[j].at || (p[i].at == p[j].at && p[i].bt > p[j].bt)) {
+                struct process temp = p[i];
+                p[i] = p[j];
+                p[j] = temp;
+            }
+        }
+    }
+
+    while (completed_processes < n) {
+        int min_bt = 9999;
+        int min_index = -1;
+
+        for (int i = 0; i < n; i++) {
+            if (!p[i].completed && p[i].at <= current_time && p[i].remaining_bt < min_bt) {
+                min_bt = p[i].remaining_bt;
+                min_index = i;
+            }
+        }
+
+        if (min_index == -1) {
+            
+            current_time++;
+        } else {
+            
+            struct process *proc = &p[min_index];
+            proc->remaining_bt--;  
+
+            
+            if (proc->remaining_bt == 0) {
+                proc->ct = current_time + 1;
+                proc->tat = proc->ct - proc->at;
+                proc->wt = proc->tat - proc->bt;
+                proc->rt = proc->wt; 
+
+                t_tat += proc->tat;
+                t_wt += proc->wt;
+                current_time = proc->ct;
+                completed_processes++;
+                proc->completed = 1;
+            } else {
+                current_time++;  
+            }
+        }
+    }
+
+   
+    double mean_tat = (double)t_tat / n;
+    double mean_wt = (double)t_wt / n;
+    printf("\nThe Average Turn Around Time For SRTF is : %.2f", mean_tat);
+    printf("\nThe Average Waiting Time For SRTF is : %.2f\n", mean_wt);
+}
+
+void printResult(struct process p[], int n) {
+    printf("\n\tPId\tAT\tBT\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++) {
+        printf("\n\t%d\t%d\t%d\t%d\t%d\t%d\n", p[i].id, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+    }
+}
+
+void printChart(struct process p[], int n) {
+  for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (p[i].ct > p[j].ct ) {
+                struct process temp = p[i];
+                p[i] = p[j];
+                p[j] = temp;
+            }
+        }
+    }
+
+
+
+    printf("\n");
+    for (int i = 0; i < n; i++) {
+        printf("    P%d", p[i].id);
+    }
+
+    printf("\n  0  ");
+    for (int i = 0; i < n; i++) {
+        printf("  %d   ", p[i].ct);
+    }
+    printf("\n");
+}
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+    struct process p[n];
+
+    Input(p, n);
+    SRTF(p, n);
+    printResult(p, n);
+    printChart(p, n);
+    return 0;
+}
+
+	
+

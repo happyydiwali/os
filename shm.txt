@@ -1,0 +1,98 @@
+// Server
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+struct student {
+    int rollno;
+    int marks1;
+    int marks2;
+    int tot;
+};
+
+#define SHMSZ sizeof(struct student)
+
+int main() {
+    int shmid;
+    key_t key;
+    struct student *shm, *s;
+
+    key = 5678;
+
+    if ((shmid = shmget(key, SHMSZ, IPC_CREAT | 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    if ((shm = shmat(shmid, NULL, 0)) == (struct student *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    s = shm;
+    s->rollno = 12345;
+    s->marks1 = 75;
+    s->marks2 = 80;
+    s->tot = 0; 
+
+	
+    while (s->tot == 0) {
+        sleep(1);
+    }
+  
+
+    printf("Total calculated by client : %d\n", s->tot);
+ 
+ 
+
+    exit(0);
+}
+
+// Client
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct student {
+    int rollno;
+    int marks1;
+    int marks2;
+    int tot;
+};
+
+#define SHMSZ sizeof(struct student)
+
+int main() {
+    int shmid;
+    key_t key;
+    struct student *shm, *s;
+
+    key = 5678;
+
+    if ((shmid = shmget(key, SHMSZ, 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    if ((shm = shmat(shmid, NULL, 0)) == (struct student *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    s = shm;
+    printf("Received shared memory data:\n");
+    printf("Roll No: %d\n", s->rollno);
+    printf("Marks1: %d\n", s->marks1);
+    printf("Marks2: %d\n", s->marks2);
+
+    s->tot = s->marks1 + s->marks2;
+    printf("Total calculated and added in memory : %d\n", s->tot);
+
+
+    exit(0);
+}

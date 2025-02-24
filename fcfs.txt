@@ -1,0 +1,107 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+struct process
+{
+	int id;
+	int at;
+	int bt;
+	int ct;
+	int wt;
+	int tat;
+	int rt;
+};
+
+void Input(struct process p[],int n)
+{
+	int i;
+	for(i=0;i<n;i++)
+	{
+		p[i].id=i+1;
+		printf("Enter the AT and BT of process %d : ",i+1);
+		scanf("%d%d",&p[i].at,&p[i].bt);
+	}
+}
+
+void FCFS(struct process p[],int n)
+{
+	int current_time=0;
+	int t_tat=0;
+	int t_wt=0;
+	int t_rt=0;
+	int idle_time=0;
+	int i;
+
+	
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (p[i].at > p[j].at || (p[i].at == p[j].at && p[i].bt > p[j].bt)) {
+                struct process temp = p[i];
+                p[i] = p[j];
+                p[j] = temp;
+            }
+        }
+    }
+
+	for(i=0;i<n;i++)
+	{
+		if(p[i].at>current_time)
+		{
+			idle_time+=p[i].at-current_time;
+			current_time=p[i].at;
+		}
+		p[i].ct=current_time+p[i].bt;
+		p[i].tat=p[i].ct-p[i].at;
+		p[i].wt=p[i].tat-p[i].bt;
+		p[i].rt=p[i].wt;
+
+		t_tat+=p[i].tat;
+		t_wt+=p[i].wt;
+		t_rt+=p[i].rt;
+		current_time=p[i].ct;
+	}
+	
+	double mean_tat=(double)t_tat/n;
+	double mean_wt=(double)t_wt/n;
+	printf("\nThe Average Turn Around Time For FCFS is :%.2f",mean_tat);
+	printf("\nThe Average Waiting Time For FCFS is :%.2f\n",mean_wt);
+}
+
+void printResult(struct process p[],int n)
+{
+	int i;
+	printf("\n\tPId\tAT\tBT\tCT\tTAT\tWT\n");
+	for(i=0;i<n;i++)
+	{
+		printf("\n\t%d\t%d\t%d\t%d\t%d\t%d\n",p[i].id,p[i].at,p[i].bt,p[i].ct,p[i].tat,p[i].wt);
+	}
+}
+
+void printChart(struct process p[],int n){
+int i;
+printf("\n");
+for(i=0;i<n;i++)
+{
+printf("    P%d",p[i].id);
+}
+
+printf("\n  %d  ",p[i].at);
+for(i=0;i<n;i++)
+{
+printf("  %d   ",p[i].ct);
+}
+
+}
+int main()
+{
+		int n;
+	printf("Enter the number of process:");
+	scanf("%d",&n);
+	struct process p[n];
+
+	Input(p,n);
+	FCFS(p,n);
+	printResult(p,n);
+	printChart(p,n);
+	return 0;
+}
