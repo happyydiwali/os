@@ -3,104 +3,91 @@
 
 struct process
 {
-    int id, at, bt, ct, wt, tat, rt, is_completed, bt_remaining;
+    int id, at, bt, ct, wt, tat, bt_remaining;
 };
 
 void Input(struct process p[], int n)
 {
-    int i;
-    for (i = 0; i < n; i++)
+    for (int i = 0; i < n; i++)
     {
         p[i].id = i + 1;
         printf("Enter AT and BT of process %d: ", i + 1);
         scanf("%d%d", &p[i].at, &p[i].bt);
-        p[i].bt_remaining = p[i].bt;  
-        p[i].is_completed = 0;
+        p[i].bt_remaining = p[i].bt;
     }
 }
 
 void roundRobin(struct process p[], int n, int quantum)
 {
-    int current_time = 0, completed = 0;
-    int t_tat = 0, t_wt = 0, idle_time = 0;
-    
-    while (completed < n)
+    int current_time = 0, completed = 0, total_tat = 0, total_wt = 0;
+    int queue[n], front = 0, rear = 0;
+    int visited[n];
+    for (int i = 0; i < n; i++)
+        visited[i] = 0;
+
+   
+    for (int i = 0; i < n - 1; i++)
     {
-        int processed = 0;
-        
-        for (int i = 0; i < n; i++)
+        for (int j = 0; j < n - i - 1; j++)
         {
-            if (p[i].at <= current_time && !p[i].is_completed)
+            if (p[j].at > p[j + 1].at)
             {
-                if (p[i].bt_remaining > quantum)
-                {
-                    current_time += quantum;
-                    p[i].bt_remaining -= quantum;
-                }
-                else
-                {
-                    current_time += p[i].bt_remaining;
-                    p[i].ct = current_time;
-                    p[i].tat = p[i].ct - p[i].at;
-                    p[i].wt = p[i].tat - p[i].bt;
-                    p[i].rt = p[i].wt;
-                    p[i].is_completed = 1;
-                    
-                    t_tat += p[i].tat;
-                    t_wt += p[i].wt;
-                    completed++;
-                }
-
-                processed = 1;
+                struct process temp = p[j];
+                p[j] = p[j + 1];
+                p[j + 1] = temp;
             }
-        }
-
-        if (processed == 0)
-        {
-            current_time++;  
-            idle_time++;
         }
     }
 
-    printf("\nThe Average Turn Around Time for Round Robin is: %.2f", (double)t_tat / n);
-    printf("\nThe Average Waiting Time for Round Robin is: %.2f\n", (double)t_wt / n);
+    queue[rear++] = 0; 
+    visited[0] = 1;
+    while (completed < n)
+    {
+        int i = queue[front++];
+        if (p[i].bt_remaining > quantum)
+        {
+            current_time += quantum;
+            p[i].bt_remaining -= quantum;
+        }
+        else
+        {
+            current_time += p[i].bt_remaining;
+            p[i].ct = current_time;
+            p[i].tat = p[i].ct - p[i].at;
+            p[i].wt = p[i].tat - p[i].bt;
+            p[i].bt_remaining = 0;
+            completed++;
+            total_tat += p[i].tat;
+            total_wt += p[i].wt;
+        }
+
+       
+        for (int j = 0; j < n; j++)
+        {
+            if (!visited[j] && p[j].at <= current_time)
+            {
+                queue[rear++] = j;
+                visited[j] = 1;
+            }
+        }
+
+     
+        if (p[i].bt_remaining > 0)
+        {
+            queue[rear++] = i;
+        }
+    }
+
+    printf("\nThe Average Turn Around Time for Round Robin is: %.2f", (double)total_tat / n);
+    printf("\nThe Average Waiting Time for Round Robin is: %.2f\n", (double)total_wt / n);
 }
 
 void printResult(struct process p[], int n)
 {
-    int i;
-    printf("\n\tPId\tAT\tBT\tCT\tTAT\tWT\n");
-    for (i = 0; i < n; i++)
+    printf("\nPId\tAT\tBT\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++)
     {
-        printf("\n\t%d\t%d\t%d\t%d\t%d\t%d\n", p[i].id, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
-    }
-}
-
-void printChart(struct process p[], int n)
-{
-    int i;
-
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = i + 1; j < n; j++) {
-            if (p[i].bt > p[j].bt ) {
-                struct process temp = p[i];
-                p[i] = p[j];
-                p[j] = temp;
-            }
-        }
-    }
-
-    
-    printf("\nGantt Chart with only Completion Time:\n");
-    for (i = 0; i < n; i++)
-    {
-        printf("    P%d ", p[i].id);
-    }
-
-    printf("\n  0  ");
-    for (i = 0; i < n; i++)
-    {
-        printf("   %d  ", p[i].ct);
+        printf("%d\t%d\t%d\t%d\t%d\t%d\n", p[i].id, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
     }
 }
 
@@ -110,16 +97,14 @@ int main()
     printf("Enter the number of processes: ");
     scanf("%d", &n);
     struct process p[n];
-
+    
     Input(p, n);
 
     printf("\nEnter Time Quantum for Round Robin: ");
     scanf("%d", &quantum);
 
-
     roundRobin(p, n, quantum);
     printResult(p, n);
-    printChart(p, n);
     
     return 0;
 }
